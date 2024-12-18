@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Pay Slip</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .payslip-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header img {
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600; /* Make the header bold */
+        }
+        .employee-details, .payment-details {
+            margin-bottom: 20px;
+        }
+        .details-item {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .details-item span {
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #555;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .uppercase {
+            text-transform: uppercase; /* Capitalize the name */
+        }
+    </style>
+</head>
+<body>
+    <div class="payslip-container">
+        <div class="header">
+            <img src="logo.png" alt="Company Logo">
+            <h1>Employee Pay Slip</h1>
+        </div>
+
+        <div class="form-group">
+            <label for="employeeName">Enter Employee Name:</label>
+            <input type="text" id="employeeName" placeholder="Type name here...">
+        </div>
+        <div class="form-group">
+            <label for="leaveDays">Enter Leave Days Taken:</label>
+            <input type="number" id="leaveDays" placeholder="Enter leave days" min="0" max="30">
+        </div>
+        <button class="button" onclick="fetchEmployeeDetails()">Generate Pay Slip</button>
+
+        <div id="payslip-content" style="margin-top: 20px;">
+            <!-- Pay slip content will be dynamically injected here -->
+        </div>
+
+        <button class="button" style="margin-top: 20px; display: none;" id="downloadButton" onclick="downloadPDF()">Download Pay Slip</button>
+
+        <div class="footer">
+            
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+        const employees = [
+            {
+                "employee id": "SMDL207",
+                "name": "s.sivananthini",
+                "position": "Web Developer",
+                "department": "Developement",
+                "basicSalary": 2500,
+                "allowances": 3000,
+                "deductions": 500
+            },
+            {
+                "employee id": "SMDL201",
+                "name": "arun kumar",
+                "position": "Senior Web Developer",
+                "department": "Developement",
+                "basicSalary": 4000,
+                "allowances": 4500,
+                "deductions": 800
+            },
+            {
+                "employee id": "SMDL202",
+                "name": "anumanth soorya",
+                "position": "CEO",
+                "department": "Management",
+                "basicSalary": 10000,
+                "allowances": 4500,
+                "deductions": 800
+            },
+            {
+                "employee id": "SMDL203",
+                "name": "durga devi",
+                "position": "President",
+                "department": "Management",
+                "basicSalary": 10000,
+                "allowances": 4500,
+                "deductions": 800
+            },
+            {
+                "employee id": "SMDL209",
+                "name": "praveen kumar",
+                "position": "Data Science",
+                "department": "IT",
+                "basicSalary": 5000,
+                "allowances": 4500,
+                "deductions": 800
+            }
+        ];
+
+        const totalWorkingDays = 30; // Assuming 30 working days in a month
+
+        function calculateNetSalary(basicSalary, allowances, deductions, leaveDays) {
+            const leaveDeduction = (basicSalary / totalWorkingDays) * leaveDays;
+            return basicSalary + allowances - deductions - leaveDeduction;
+        }
+
+        function fetchEmployeeDetails() {
+            const name = document.getElementById('employeeName').value.trim();
+            const leaveDays = parseInt(document.getElementById('leaveDays').value) || 0;
+            const employee = employees.find(emp => emp.name.toLowerCase() === name.toLowerCase());
+
+            if (!employee) {
+                document.getElementById('payslip-content').innerHTML = '<p>Employee not found.</p>';
+                document.getElementById('downloadButton').style.display = 'none';
+                return;
+            }
+
+            const netSalary = calculateNetSalary(employee.basicSalary, employee.allowances, employee.deductions, leaveDays);
+            const leaveDeduction = (employee.basicSalary / totalWorkingDays) * leaveDays;
+
+            document.getElementById('payslip-content').innerHTML = `
+                <div class="employee-details">
+                    <div class="details-item"><span>Name:</span> <span class="uppercase">${employee.name}</span></div>
+                    <div class="details-item"><span>Position:</span> <span>${employee.position}</span></div>
+                    <div class="details-item"><span>Department:</span> <span>${employee.department}</span></div>
+                </div>
+                <div class="payment-details">
+                    <div class="details-item"><span>Basic Salary:</span> <span>Rs.${employee.basicSalary}</span></div>
+                    <div class="details-item"><span>Allowances:</span> <span>Rs.${employee.allowances}</span></div>
+                    <div class="details-item"><span>Deductions:</span> <span>Rs.${employee.deductions}</span></div>
+                    <div class="details-item"><span>Leave Deduction:</span> <span>Rs.${leaveDeduction.toFixed(2)}</span></div>
+                    <div class="details-item"><span>Net Salary:</span> <span>Rs.${netSalary.toFixed(2)}</span></div>
+                </div>
+            `;
+
+            document.getElementById('downloadButton').style.display = 'inline-block';
+        }
+
+        function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const margin = 10;
+
+    // Add Logo Image
+    const img = new Image();
+    img.src = 'logo.png'; // Ensure this file exists in the same directory
+    img.onload = function () {
+        const imgWidth = 60; // Width of the logo
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const imgX = margin; // Centering the image horizontally
+        const imgY = margin; // Position from top margin
+
+        doc.addImage(img, 'PNG', imgX, imgY, imgWidth, 30); // Logo position and size
+
+        const companyName = "SHARPENED MIND TECH & SOLUTIONS";
+        const companyAddress = "THIRU NAGAR, MADURAI.";
+        const payslipTitle = "EMPLOYEE PAYSLIP";
+
+        const name = document.getElementById('employeeName').value.trim();
+        const leaveDays = parseInt(document.getElementById('leaveDays').value) || 0;
+        const employee = employees.find(emp => emp.name.toLowerCase() === name.toLowerCase());
+        if (!employee) {
+            alert('Employee not found!');
+            return;
+        }
+
+        const netSalary = calculateNetSalary(employee.basicSalary, employee.allowances, employee.deductions, leaveDays);
+        const leaveDeduction = (employee.basicSalary / totalWorkingDays) * leaveDays;
+
+        // Get Current Date
+        const currentDate = new Date();
+        const formattedDate = currentDate.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        });
+
+        // Header Section
+        doc.setFontSize(12);
+        doc.setFont("Poppins", "bold");
+        doc.text(companyName, pageWidth / 2, imgY + 15, { align: 'left' });
+        doc.setFontSize(10);
+        doc.setFont("Poppins", "normal");
+        doc.text(companyAddress, pageWidth / 2, imgY + 20, { align: 'left' });
+        doc.text(`Date: ${formattedDate}`, pageWidth - margin - 30, imgY + 30); // Add current date to the top right
+
+        doc.setFontSize(14);
+        doc.setFont("Poppins", "bold");
+        doc.text(payslipTitle, pageWidth / 2, imgY + 40, { align: 'center' });
+
+        // Employee and General Details
+        let currentY = imgY + 50; // Start position for employee details
+        doc.setFontSize(10);
+        doc.text(`NAME: ${employee.name.toUpperCase()}`, margin, currentY); // Ensure name is uppercase
+        doc.text(`EMPLOYEE ID: ${employee["employee id"]}`, margin , currentY + 5); 
+        doc.text(`POSITION: ${employee.position}`, margin, currentY + 10);
+        doc.text(`DEPARTMENT: ${employee.department}`,pageWidth / 2, currentY );
+        doc.text(`WORKED DAYS: ${totalWorkingDays - leaveDays}`, pageWidth / 2, currentY + 5);
+        doc.text(`LEAVE TAKEN: ${leaveDays}`, pageWidth / 2, currentY + 10);
+
+        // Table Headers
+        currentY += 20; // Move down for table headers
+        doc.setFont("Poppins", "bold");
+        doc.text("EARNINGS", margin, currentY);
+        doc.text("AMOUNT", margin + 50, currentY);
+        doc.text("DEDUCTIONS", pageWidth / 2, currentY);
+        doc.text("AMOUNT", pageWidth / 2 + 40, currentY);
+        doc.line(margin, currentY + 2, pageWidth - margin, currentY + 2);
+
+        // Table Content
+        currentY += 8;
+        doc.setFont("Poppins", "normal");
+        doc.text("Basic", margin, currentY);
+        doc.text(`Rs.${employee.basicSalary}`, margin + 50, currentY);
+        doc.text("Provident Fund", pageWidth / 2, currentY);
+        doc.text("Rs.500", pageWidth / 2 + 40, currentY);
+
+        currentY += 6;
+        doc.text("Allowances", margin, currentY);
+        doc.text(`Rs.${employee.allowances}`, margin + 50, currentY);
+        doc.text("Dts", pageWidth / 2, currentY);
+        doc.text(`Rs.${employee.deductions}`, pageWidth / 2 + 40, currentY);
+
+        currentY += 6;
+        doc.text("Leave Deduction", margin, currentY);
+        doc.text(`Rs.${leaveDeduction.toFixed(2)}`, margin + 50, currentY);
+
+        // Total Section
+        currentY += 10;
+        doc.line(margin, currentY, pageWidth - margin, currentY);
+        currentY += 5;
+        doc.setFont("Poppins", "bold");
+        doc.text("NET PAY:", margin + 100, currentY);
+        doc.text(`Rs.${netSalary.toFixed(2)}`, pageWidth / 2 + 40, currentY);
+
+        // Adjust for Signature Position (Centered)
+        const signYPosition = doc.internal.pageSize.getHeight() - 180; // Adjust for bottom margin position
+
+        const presidentSign = new Image();
+        presidentSign.src = 'logo.png'; // Signature file (ensure this exists)
+        presidentSign.onload = function () {
+            const signWidth = 50; // Width of signature
+            const signHeight = 20; // Height of signature
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const signXPosition = (pageWidth - signWidth) / 2; // Centering horizontally
+
+            // Add Signature Image
+            doc.addImage(presidentSign, 'PNG', signXPosition, signYPosition, signWidth, signHeight);
+
+            // Add President Label (Centered Below Signature)
+            doc.setFontSize(10);
+            doc.setFont("Poppins", "italic");
+            doc.text("CEO OF SHARPENED MIND", pageWidth / 2, signYPosition + 25, { align: 'center' });
+
+            // Save PDF after Image Loads
+            doc.save(`payslip_${employee.name}.pdf`);
+        };
+    };
+}
+
+    </script>
+</body>
+</html> 
